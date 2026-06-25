@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  /* 工业监控配色：冷静、专业 */
+  --bg: #0a0e14;
+  --surface: #111822;
+  --surface2: #1a2332;
+  --surface3: #243044;
+  --border: #2a3a50;
+  --border-light: #3a4a60;
+
+  /* 文字层级 */
+  --text: #e8edf4;
+  --text-secondary: #8899aa;
+  --text-muted: #5a6a7a;
+  --nav-active: #e8edf4;
+
+  /* 模式色：仅用于随机/手动状态 */
+  --cyan: #00d4aa;
+  --cyan-dim: rgba(0, 212, 170, 0.15);
+  --orange: #f59e0b;
+  --orange-dim: rgba(245, 158, 11, 0.12);
+
+  /* 辅助色 */
+  --blue: #3b82f6;
+  --blue-dim: rgba(59, 130, 246, 0.12);
+  --danger: #ef4444;
+  --red: #ef4444;
+  --red-dim: rgba(239, 68, 68, 0.12);
+}
+
+/* Tab 横滑右侧渐变提示 */
+.tab-scroll-fade {
+  position: relative;
+}
+.tab-scroll-fade::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--bg));
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+
+/* 隐藏 number input 箭头 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
