@@ -4,6 +4,7 @@ Pulls live data from the simulator's REST API and renders a single static
 HTML snapshot.  All paths/URLs are configurable via CLI args or env vars —
 no hardcoded localhost or absolute Windows paths.
 """
+
 import argparse
 import json
 import os
@@ -12,9 +13,7 @@ import urllib.request
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_API_URL = os.environ.get(
-    "OPC_API_URL", "http://localhost:18480/api/nodes"
-)
+DEFAULT_API_URL = os.environ.get("OPC_API_URL", "http://localhost:18480/api/nodes")
 DEFAULT_OUT_PATH = SCRIPT_DIR / "frontend" / "dist" / "preview.html"
 DEFAULT_STRATEGY_COUNT = int(os.environ.get("OPC_STRATEGY_COUNT", "12"))
 DEFAULT_NODE_LIMIT = int(os.environ.get("OPC_PREVIEW_NODE_LIMIT", "20"))
@@ -28,7 +27,8 @@ def fetch_nodes(api_url: str, timeout: float = 10.0) -> list:
 
 
 def build_html(groups: list, total: int, strategy_count: int, node_limit: int) -> str:
-    html = """<!DOCTYPE html>
+    html = (
+        """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -77,19 +77,30 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   <h1>OPC 通用模拟器</h1>
   <p>通用 OPC UA 数据源 — 上传点表 Excel，自动建模生成模拟数据</p>
   <div class="stats">
-    <div class="stat"><div class="stat-val">""" + str(total) + """</div><div class="stat-label">节点总数</div></div>
-    <div class="stat"><div class="stat-val">""" + str(len(groups)) + """</div><div class="stat-label">设备分组</div></div>
-    <div class="stat"><div class="stat-val">""" + str(sum(1 for g in groups for n in g['nodes'] if n['mode'] == 'random')) + """</div><div class="stat-label">随机模式</div></div>
-    <div class="stat"><div class="stat-val">""" + str(strategy_count) + """</div><div class="stat-label">值生成策略</div></div>
+    <div class="stat"><div class="stat-val">"""
+        + str(total)
+        + """</div><div class="stat-label">节点总数</div></div>
+    <div class="stat"><div class="stat-val">"""
+        + str(len(groups))
+        + """</div><div class="stat-label">设备分组</div></div>
+    <div class="stat"><div class="stat-val">"""
+        + str(sum(1 for g in groups for n in g["nodes"] if n["mode"] == "random"))
+        + """</div><div class="stat-label">随机模式</div></div>
+    <div class="stat"><div class="stat-val">"""
+        + str(strategy_count)
+        + """</div><div class="stat-label">值生成策略</div></div>
   </div>
 </div>
 
 <div class="tabs">
 """
+    )
     for i, g in enumerate(groups):
-        active = ' active' if i == 0 else ''
-        html += '  <div class="tab{}">{} <span class="count">({})</span></div>\n'.format(
-            active, g['label'], g['count']
+        active = " active" if i == 0 else ""
+        html += (
+            '  <div class="tab{}">{} <span class="count">({})</span></div>\n'.format(
+                active, g["label"], g["count"]
+            )
         )
 
     html += """
@@ -109,38 +120,42 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 """
     idx = 0
     for g in groups:
-        for n in g['nodes']:
-            mode = n.get('mode', 'random')
-            bar_cls = 'bar-random' if mode == 'random' else 'bar-manual'
-            val = n.get('value', 0)
-            badge_cls = 'badge-random' if mode == 'random' else 'badge-manual'
-            mode_text = '随机' if mode == 'random' else '手动'
+        for n in g["nodes"]:
+            mode = n.get("mode", "random")
+            bar_cls = "bar-random" if mode == "random" else "bar-manual"
+            val = n.get("value", 0)
+            badge_cls = "badge-random" if mode == "random" else "badge-manual"
+            mode_text = "随机" if mode == "random" else "手动"
 
-            if n['data_type'] == 'bool':
-                val_str = 'ON' if val else 'OFF'
-            elif n['data_type'] == 'int':
+            if n["data_type"] == "bool":
+                val_str = "ON" if val else "OFF"
+            elif n["data_type"] == "int":
                 val_str = str(int(val))
             else:
-                val_str = '{:.2f}'.format(val)
+                val_str = "{:.2f}".format(val)
 
-            strat = n.get('gen_strategy', 'auto')
-            unit = n.get('unit', '')
-            rlo = n.get('range_lo', 0)
-            rhi = n.get('range_hi', 0)
-            dtype = n.get('data_type', 'float')
+            strat = n.get("gen_strategy", "auto")
+            unit = n.get("unit", "")
+            rlo = n.get("range_lo", 0)
+            rhi = n.get("range_hi", 0)
+            dtype = n.get("data_type", "float")
 
             html += '  <div class="row">\n'
             html += '    <div class="bar {}"></div>\n'.format(bar_cls)
             html += '    <div class="col-name">{}<div class="node-id">{}</div></div>\n'.format(
-                n.get('display_name') or n.get('node_id', '?'), n.get('node_id', '')
+                n.get("display_name") or n.get("node_id", "?"), n.get("node_id", "")
             )
             html += '    <div class="col-type">{}</div>\n'.format(dtype)
             html += '    <div class="col-range">{} ~ {}</div>\n'.format(rlo, rhi)
             html += '    <div class="col-unit">{}</div>\n'.format(unit)
-            html += '    <div class="col-strategy"><span class="badge badge-strategy">{}</span></div>\n'.format(strat)
-            html += '    <div class="col-mode"><span class="badge {}">{}</span></div>\n'.format(badge_cls, mode_text)
+            html += '    <div class="col-strategy"><span class="badge badge-strategy">{}</span></div>\n'.format(
+                strat
+            )
+            html += '    <div class="col-mode"><span class="badge {}">{}</span></div>\n'.format(
+                badge_cls, mode_text
+            )
             html += '    <div class="col-value">{}</div>\n'.format(val_str)
-            html += '  </div>\n'
+            html += "  </div>\n"
             idx += 1
             if idx >= node_limit:
                 break
@@ -163,15 +178,32 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate preview HTML from OPC simulator API")
-    parser.add_argument("--api-url", default=DEFAULT_API_URL,
-                        help="API base URL (default: %(default)s, env: OPC_API_URL)")
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_PATH,
-                        help="Output HTML path (default: %(default)s)")
-    parser.add_argument("--strategy-count", type=int, default=DEFAULT_STRATEGY_COUNT,
-                        help="Strategy count for stat display (env: OPC_STRATEGY_COUNT)")
-    parser.add_argument("--node-limit", type=int, default=DEFAULT_NODE_LIMIT,
-                        help="Max nodes to render (env: OPC_PREVIEW_NODE_LIMIT)")
+    parser = argparse.ArgumentParser(
+        description="Generate preview HTML from OPC simulator API"
+    )
+    parser.add_argument(
+        "--api-url",
+        default=DEFAULT_API_URL,
+        help="API base URL (default: %(default)s, env: OPC_API_URL)",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=DEFAULT_OUT_PATH,
+        help="Output HTML path (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--strategy-count",
+        type=int,
+        default=DEFAULT_STRATEGY_COUNT,
+        help="Strategy count for stat display (env: OPC_STRATEGY_COUNT)",
+    )
+    parser.add_argument(
+        "--node-limit",
+        type=int,
+        default=DEFAULT_NODE_LIMIT,
+        help="Max nodes to render (env: OPC_PREVIEW_NODE_LIMIT)",
+    )
     args = parser.parse_args()
 
     try:
@@ -182,10 +214,15 @@ def main() -> None:
         sys.exit(1)
 
     groups = [
-        {'key': g['key'], 'label': g['label'], 'count': len(g['nodes']), 'nodes': g['nodes']}
+        {
+            "key": g["key"],
+            "label": g["label"],
+            "count": len(g["nodes"]),
+            "nodes": g["nodes"],
+        }
         for g in data
     ]
-    total = sum(g['count'] for g in groups)
+    total = sum(g["count"] for g in groups)
     html = build_html(groups, total, args.strategy_count, args.node_limit)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

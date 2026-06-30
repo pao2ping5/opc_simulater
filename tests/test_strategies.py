@@ -6,7 +6,7 @@ Covers:
 - Type coercion for bool / int / string / float
 - StrategyRegistry.resolve() default selection per data_type
 """
-import math
+
 import random
 
 import pytest
@@ -28,16 +28,24 @@ from common import (
 # ── Strategy return values stay in range ────────────────────────────
 
 
-@pytest.mark.parametrize("strategy_fn", [
-    _make_uniform, _make_normal, _make_sinusoidal,
-    _make_random_walk, _make_pressure,
-])
+@pytest.mark.parametrize(
+    "strategy_fn",
+    [
+        _make_uniform,
+        _make_normal,
+        _make_sinusoidal,
+        _make_random_walk,
+        _make_pressure,
+    ],
+)
 def test_strategy_returns_value_in_range(strategy_fn):
     lo, hi = 10.0, 20.0
     random.seed(42)
     for _ in range(50):
         val = strategy_fn(lo, hi, {}, 15.0, 0.0, 0)
-        assert lo <= val <= hi, f"{strategy_fn.__name__} returned {val} out of [{lo}, {hi}]"
+        assert lo <= val <= hi, (
+            f"{strategy_fn.__name__} returned {val} out of [{lo}, {hi}]"
+        )
 
 
 # ── Division-by-zero edge cases (previously crashes) ────────────────
@@ -112,8 +120,12 @@ def test_generate_bool_returns_0_or_1():
 
 def test_generate_string_returns_str():
     reg = _make_registry()
-    node = NodeMeta(node_id="x", data_type="string", gen_strategy="constant",
-                    gen_params={"value": 42.5})
+    node = NodeMeta(
+        node_id="x",
+        data_type="string",
+        gen_strategy="constant",
+        gen_params={"value": 42.5},
+    )
     val = reg.generate(node, 0, 0, 0)
     assert isinstance(val, str)
     assert "42" in val

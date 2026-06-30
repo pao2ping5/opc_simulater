@@ -8,6 +8,7 @@ copies.
 
 Usage:  python server.py [--xlsx path/to/model.xlsx]
 """
+
 from __future__ import annotations
 
 import logging
@@ -46,6 +47,7 @@ log = logging.getLogger("opc-sim-server")
 # Point table generator
 # ========================================================================
 
+
 def generate_reading_excel(
     model_nodes: List[NodeMeta],
     output_path: str | Path,
@@ -70,7 +72,9 @@ def generate_reading_excel(
         ws.cell(row=i, column=2, value=f"ns={ns};s={meta.node_id}")
 
     wb.save(str(output_path))
-    log.info("Client point table written to %s (%d rows)", output_path, len(model_nodes))
+    log.info(
+        "Client point table written to %s (%d rows)", output_path, len(model_nodes)
+    )
 
 
 # ========================================================================
@@ -78,8 +82,10 @@ def generate_reading_excel(
 # ========================================================================
 
 if __name__ == "__main__":
-    xlsx_path = sys.argv[1] if len(sys.argv) > 1 else os.environ.get(
-        "OPC_POINT_TABLE", str(DEFAULT_XLSX)
+    xlsx_path = (
+        sys.argv[1]
+        if len(sys.argv) > 1
+        else os.environ.get("OPC_POINT_TABLE", str(DEFAULT_XLSX))
     )
     output_path = SCRIPT_DIR / "opc_sim_list.xlsx"
 

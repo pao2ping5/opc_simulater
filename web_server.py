@@ -13,6 +13,7 @@ This module is now a thin entry point — actual logic lives in:
 
 Usage:  python web_server.py
 """
+
 from __future__ import annotations
 
 import os
@@ -31,7 +32,6 @@ from app_config import (
     WEB_PORT,
     API_TOKEN,
     CORS_ALLOWED_ORIGINS,
-    SCRIPT_DIR,
     log,
 )
 from helpers import ThreadingHTTPServer
@@ -46,6 +46,7 @@ from app_config import (  # noqa: F401  (re-export)
     MODEL_PATH_ALLOWLIST,
     UPLOAD_DIR,
     PUBLIC_API_PATHS,
+    SCRIPT_DIR,
     CORS_ALLOWED_ORIGINS as _CORS,  # already imported above; alias to silence linter
 )
 from helpers import (  # noqa: F401  (re-export)
@@ -66,8 +67,12 @@ def main() -> None:
     # Try saved state first, otherwise parse Excel
     model = load_model_state(STATE_FILE)
     if model is not None:
-        log.info("Restored model state from %s: %d nodes, %d groups",
-                 STATE_FILE, len(model.nodes), len(model.groups))
+        log.info(
+            "Restored model state from %s: %d nodes, %d groups",
+            STATE_FILE,
+            len(model.nodes),
+            len(model.groups),
+        )
     else:
         log.info("Loading model from %s", xlsx_path)
         nodes, warnings = read_model_excel(xlsx_path)
@@ -75,8 +80,9 @@ def main() -> None:
             log.warning("  %s", w)
         model = build_device_model(nodes)
         save_model_state(model, STATE_FILE)
-        log.info("Parsed %d nodes across %d groups",
-                 len(model.nodes), len(model.groups))
+        log.info(
+            "Parsed %d nodes across %d groups", len(model.nodes), len(model.groups)
+        )
 
     # ── Start simulator ─────────────────────────────────────────
     sim = GenericOPCSimulator(state_file=STATE_FILE)
