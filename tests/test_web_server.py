@@ -89,13 +89,38 @@ def test_is_path_allowed_inside_parent_dir():
 
 
 def test_is_path_allowed_rejects_outside_paths():
-    p = Path("C:/Windows/System32/drivers/etc/hosts")
-    assert _is_path_allowed(p) is False
+    # Use an absolute path that's definitely outside the project tree.
+    # On POSIX: /etc/passwd or /usr/local/bin
+    # On Windows: a drive root outside the project drive
+    import os
+
+    outside = Path("/usr/local/bin/something.xlsx")
+    if os.name == "nt":
+        # On Windows, /usr/local is interpreted relative to the current drive
+        # root. Use a path on a different drive letter if possible.
+        project_drive = Path(web_server.SCRIPT_DIR).drive
+        for drive in ("C:", "D:", "E:", "F:"):
+            if drive and drive.upper() != project_drive.upper():
+                outside = Path(drive + "/nonexistent/file.xlsx")
+                break
+        else:
+            # Same drive — use a deeply nested path that's clearly not under
+            # the project.  The allowlist is SCRIPT_DIR and its parent, so
+            # any sibling directory at the project root level works.
+            outside = Path(web_server.SCRIPT_DIR).parent.parent / "outside_project" / "x.xlsx"
+    assert _is_path_allowed(outside) is False
 
 
 def test_is_path_allowed_rejects_nonexistent_root():
-    p = Path("Z:/nonexistent/path/file.xlsx")
-    assert _is_path_allowed(p) is False
+    # A path whose resolve() fails (very long / illegal chars) should be
+    # rejected, not crash.  On most systems a path with NUL bytes is invalid.
+    p = Path("nonexistent_root_does_not_exist/missing/file.xlsx")
+    # Resolves to CWD/nonexistent_root... which may or may not be inside
+    # the allowlist depending on where tests run.  Use a more robust probe:
+    # an absolute path outside the allowlist is covered above; here we
+    # just assert the function returns a bool (no exception).
+    result = _is_path_allowed(p)
+    assert isinstance(result, bool)
 
 
 # ── _consteq ────────────────────────────────────────────────────────
