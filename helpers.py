@@ -17,7 +17,7 @@ import json
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from socketserver import ThreadingMixIn
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from app_config import MAX_REQUEST_BYTES, MODEL_PATH_ALLOWLIST
 
@@ -36,7 +36,7 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
 # MIME types
 # ---------------------------------------------------------------------------
 
-MIME_TYPES: Dict[str, str] = {
+MIME_TYPES: dict[str, str] = {
     ".html": "text/html; charset=utf-8",
     ".js": "application/javascript; charset=utf-8",
     ".css": "text/css; charset=utf-8",
@@ -56,7 +56,7 @@ MIME_TYPES: Dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 
-def parse_json_body(handler: SimpleHTTPRequestHandler) -> Optional[Dict[str, Any]]:
+def parse_json_body(handler: SimpleHTTPRequestHandler) -> dict[str, Any] | None:
     """Safely parse JSON request body.  Sends 400 on failure.
 
     Public name (no leading underscore) so the API handler module can import
@@ -84,7 +84,7 @@ def parse_json_body(handler: SimpleHTTPRequestHandler) -> Optional[Dict[str, Any
         return None
 
 
-def require_fields(data: Dict[str, Any], *fields: str) -> Optional[str]:
+def require_fields(data: dict[str, Any], *fields: str) -> str | None:
     """Check that all required fields exist.  Returns first missing or None."""
     for f in fields:
         val = data.get(f)
@@ -93,7 +93,7 @@ def require_fields(data: Dict[str, Any], *fields: str) -> Optional[str]:
     return None
 
 
-def parse_multipart_file(body: bytes, content_type: str) -> Tuple[str, bytes]:
+def parse_multipart_file(body: bytes, content_type: str) -> tuple[str, bytes]:
     """Extract the first file part from a multipart/form-data body.
 
     Returns ``(filename, file_bytes)``.  Raises ``ValueError`` on malformed
@@ -121,7 +121,7 @@ def parse_multipart_file(body: bytes, content_type: str) -> Tuple[str, bytes]:
         if data_bytes.endswith(b"\r\n"):
             data_bytes = data_bytes[:-2]
 
-        filename: Optional[str] = None
+        filename: str | None = None
         is_file = False
         for line in header_bytes.split("\r\n"):
             lower = line.lower()

@@ -26,7 +26,6 @@ from common import (
     save_model_state,
 )
 
-
 # ── Fixtures ────────────────────────────────────────────────────────
 
 

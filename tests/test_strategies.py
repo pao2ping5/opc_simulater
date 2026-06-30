@@ -24,7 +24,6 @@ from common import (
     get_strategy_registry,
 )
 
-
 # ── Strategy return values stay in range ────────────────────────────
 
 
@@ -43,9 +42,7 @@ def test_strategy_returns_value_in_range(strategy_fn):
     random.seed(42)
     for _ in range(50):
         val = strategy_fn(lo, hi, {}, 15.0, 0.0, 0)
-        assert lo <= val <= hi, (
-            f"{strategy_fn.__name__} returned {val} out of [{lo}, {hi}]"
-        )
+        assert lo <= val <= hi, f"{strategy_fn.__name__} returned {val} out of [{lo}, {hi}]"
 
 
 # ── Division-by-zero edge cases (previously crashes) ────────────────

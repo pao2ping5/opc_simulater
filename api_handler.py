@@ -13,14 +13,9 @@ import json
 import time
 from http.server import SimpleHTTPRequestHandler
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 
-from common import (
-    build_device_model,
-    node_meta_to_dict,
-    read_model_excel,
-)
 from app_config import (
     API_TOKEN,
     CORS_ALLOWED_ORIGINS,
@@ -28,6 +23,11 @@ from app_config import (
     PUBLIC_API_PATHS,
     UPLOAD_DIR,
     log,
+)
+from common import (
+    build_device_model,
+    node_meta_to_dict,
+    read_model_excel,
 )
 from helpers import (
     MIME_TYPES,
@@ -44,7 +44,7 @@ from static import read_dist
 class APIHandler(SimpleHTTPRequestHandler):
     """HTTP handler serving React SPA + REST API."""
 
-    simulator: Optional[GenericOPCSimulator] = None
+    simulator: GenericOPCSimulator | None = None
 
     # -- Auth ------------------------------------------------------------
 
@@ -77,9 +77,9 @@ class APIHandler(SimpleHTTPRequestHandler):
         self._cors()
         self.end_headers()
         self.wfile.write(
-            json.dumps(
-                {"error": "unauthorized", "message": "Missing or invalid token"}
-            ).encode("utf-8")
+            json.dumps({"error": "unauthorized", "message": "Missing or invalid token"}).encode(
+                "utf-8"
+            )
         )
 
     # -- CORS ------------------------------------------------------------
@@ -92,9 +92,7 @@ class APIHandler(SimpleHTTPRequestHandler):
         allowed = "*" if "*" in CORS_ALLOWED_ORIGINS else origin
         if allowed and (allowed == "*" or origin in CORS_ALLOWED_ORIGINS):
             self.send_header("Access-Control-Allow-Origin", allowed)
-            self.send_header(
-                "Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS"
-            )
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
             if allowed != "*":
                 self.send_header("Vary", "Origin")
@@ -314,9 +312,7 @@ class APIHandler(SimpleHTTPRequestHandler):
             return
 
         try:
-            filename, file_bytes = _parse_multipart_file(
-                body, self.headers.get("Content-Type", "")
-            )
+            filename, file_bytes = _parse_multipart_file(body, self.headers.get("Content-Type", ""))
         except ValueError as exc:
             self.send_error(400, str(exc))
             return

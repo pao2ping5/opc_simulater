@@ -16,7 +16,7 @@ import os
 import signal
 import sys
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 from openpyxl import Workbook
 
@@ -25,7 +25,7 @@ from common import (
     build_device_model,
     read_model_excel,
 )
-from simulator import GenericOPCSimulator, DEFAULT_OPC_ENDPOINT
+from simulator import DEFAULT_OPC_ENDPOINT, GenericOPCSimulator
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -49,7 +49,7 @@ log = logging.getLogger("opc-sim-server")
 
 
 def generate_reading_excel(
-    model_nodes: List[NodeMeta],
+    model_nodes: list[NodeMeta],
     output_path: str | Path,
     ns: int = 2,
 ) -> None:
@@ -72,9 +72,7 @@ def generate_reading_excel(
         ws.cell(row=i, column=2, value=f"ns={ns};s={meta.node_id}")
 
     wb.save(str(output_path))
-    log.info(
-        "Client point table written to %s (%d rows)", output_path, len(model_nodes)
-    )
+    log.info("Client point table written to %s (%d rows)", output_path, len(model_nodes))
 
 
 # ========================================================================
@@ -83,9 +81,7 @@ def generate_reading_excel(
 
 if __name__ == "__main__":
     xlsx_path = (
-        sys.argv[1]
-        if len(sys.argv) > 1
-        else os.environ.get("OPC_POINT_TABLE", str(DEFAULT_XLSX))
+        sys.argv[1] if len(sys.argv) > 1 else os.environ.get("OPC_POINT_TABLE", str(DEFAULT_XLSX))
     )
     output_path = SCRIPT_DIR / "opc_sim_list.xlsx"
 

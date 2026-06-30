@@ -19,44 +19,41 @@ from __future__ import annotations
 import os
 import threading
 
+from api_handler import APIHandler
+
+# Re-export public symbols used by tests / external callers via ``web_server.X``.
+# After the refactor, the canonical homes are config/helpers/api_handler, but
+# we keep backward-compatible aliases here so existing importers don't break.
+from app_config import (  # noqa: F401  (re-export)
+    API_TOKEN,
+    CORS_ALLOWED_ORIGINS,
+    DEFAULT_XLSX,
+    MAX_REQUEST_BYTES,
+    MODEL_PATH_ALLOWLIST,
+    PUBLIC_API_PATHS,
+    SCRIPT_DIR,
+    STATE_FILE,
+    UPLOAD_DIR,
+    WEB_HOST,
+    WEB_PORT,
+    log,
+)
 from common import (
     build_device_model,
     load_model_state,
     read_model_excel,
     save_model_state,
 )
-from app_config import (
-    DEFAULT_XLSX,
-    STATE_FILE,
-    WEB_HOST,
-    WEB_PORT,
-    API_TOKEN,
-    CORS_ALLOWED_ORIGINS,
-    log,
-)
-from helpers import ThreadingHTTPServer
-from api_handler import APIHandler
-from simulator import GenericOPCSimulator
-
-# Re-export public symbols used by tests / external callers via ``web_server.X``.
-# After the refactor, the canonical homes are config/helpers/api_handler, but
-# we keep backward-compatible aliases here so existing importers don't break.
-from app_config import (  # noqa: F401  (re-export)
-    MAX_REQUEST_BYTES,
-    MODEL_PATH_ALLOWLIST,
-    UPLOAD_DIR,
-    PUBLIC_API_PATHS,
-    SCRIPT_DIR,
-    CORS_ALLOWED_ORIGINS as _CORS,  # already imported above; alias to silence linter
-)
 from helpers import (  # noqa: F401  (re-export)
     MIME_TYPES,
+    ThreadingHTTPServer,
     _consteq,
     _is_path_allowed,
     _parse_json_body,
     _parse_multipart_file,
     _require_fields,
 )
+from simulator import GenericOPCSimulator
 from static import read_dist  # noqa: F401  (re-export)
 
 
@@ -80,9 +77,7 @@ def main() -> None:
             log.warning("  %s", w)
         model = build_device_model(nodes)
         save_model_state(model, STATE_FILE)
-        log.info(
-            "Parsed %d nodes across %d groups", len(model.nodes), len(model.groups)
-        )
+        log.info("Parsed %d nodes across %d groups", len(model.nodes), len(model.groups))
 
     # ── Start simulator ─────────────────────────────────────────
     sim = GenericOPCSimulator(state_file=STATE_FILE)

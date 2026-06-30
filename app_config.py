@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Tuple
 
 # ---------------------------------------------------------------------------
 # Filesystem locations
@@ -44,7 +43,7 @@ MAX_REQUEST_BYTES = 10 * 1024 * 1024
 
 # Where file_path-based model loads may read from.  Absolute paths outside
 # this allowlist are rejected.
-MODEL_PATH_ALLOWLIST: Tuple[Path, ...] = (SCRIPT_DIR, SCRIPT_DIR.parent)
+MODEL_PATH_ALLOWLIST: tuple[Path, ...] = (SCRIPT_DIR, SCRIPT_DIR.parent)
 
 # ---------------------------------------------------------------------------
 # CORS
@@ -55,7 +54,7 @@ MODEL_PATH_ALLOWLIST: Tuple[Path, ...] = (SCRIPT_DIR, SCRIPT_DIR.parent)
 # or OPC_CORS_ORIGIN=* to restore the old wide-open behavior (not recommended
 # for industrial control networks).
 _CORS_ORIGIN_ENV = os.environ.get("OPC_CORS_ORIGIN", "")
-CORS_ALLOWED_ORIGINS: Tuple[str, ...] = tuple(
+CORS_ALLOWED_ORIGINS: tuple[str, ...] = tuple(
     o.strip() for o in _CORS_ORIGIN_ENV.split(",") if o.strip()
 )
 

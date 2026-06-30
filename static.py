@@ -8,7 +8,6 @@ via ``Path.relative_to``.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from app_config import DIST_DIR
 from helpers import MIME_TYPES
@@ -44,7 +43,7 @@ def serve_static(handler, path: str) -> None:
     handler.send_error(404, "Not found")
 
 
-def read_dist(relative_path: str) -> Optional[bytes]:
+def read_dist(relative_path: str) -> bytes | None:
     """Read a file from ``DIST_DIR`` with path-traversal guard.
 
     Returns ``None`` if the path escapes ``DIST_DIR`` or doesn't exist.

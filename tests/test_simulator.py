@@ -26,9 +26,7 @@ from simulator import GenericOPCSimulator
 @pytest.fixture
 def small_model():
     nodes = [
-        NodeMeta(
-            node_id="A.B.temp", data_type="float", range_lo=0, range_hi=100, unit="C"
-        ),
+        NodeMeta(node_id="A.B.temp", data_type="float", range_lo=0, range_hi=100, unit="C"),
         NodeMeta(node_id="A.B.switch", data_type="bool"),
         NodeMeta(node_id="A.C.counter", data_type="int", range_lo=0, range_hi=1000),
         NodeMeta(node_id="A.C.label", data_type="string"),

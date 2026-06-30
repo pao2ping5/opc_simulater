@@ -16,7 +16,7 @@ async function _jsonOrThrow(res) {
   if (text) {
     try {
       data = JSON.parse(text)
-    } catch (e) {
+    } catch {
       // Non-JSON response (e.g. plain text error page)
     }
   }

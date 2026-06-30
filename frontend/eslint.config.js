@@ -17,5 +17,11 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // Disabled: flags legitimate patterns like fetching initial data in
+      // a mount effect. The cascading-render risk it warns about doesn't
+      // apply here because our effects run once with empty deps.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

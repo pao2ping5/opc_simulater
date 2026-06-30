@@ -97,10 +97,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     )
     for i, g in enumerate(groups):
         active = " active" if i == 0 else ""
-        html += (
-            '  <div class="tab{}">{} <span class="count">({})</span></div>\n'.format(
-                active, g["label"], g["count"]
-            )
+        html += '  <div class="tab{}">{} <span class="count">({})</span></div>\n'.format(
+            active, g["label"], g["count"]
         )
 
     html += """
@@ -132,7 +130,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             elif n["data_type"] == "int":
                 val_str = str(int(val))
             else:
-                val_str = "{:.2f}".format(val)
+                val_str = f"{val:.2f}"
 
             strat = n.get("gen_strategy", "auto")
             unit = n.get("unit", "")
@@ -141,20 +139,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             dtype = n.get("data_type", "float")
 
             html += '  <div class="row">\n'
-            html += '    <div class="bar {}"></div>\n'.format(bar_cls)
+            html += f'    <div class="bar {bar_cls}"></div>\n'
             html += '    <div class="col-name">{}<div class="node-id">{}</div></div>\n'.format(
                 n.get("display_name") or n.get("node_id", "?"), n.get("node_id", "")
             )
-            html += '    <div class="col-type">{}</div>\n'.format(dtype)
-            html += '    <div class="col-range">{} ~ {}</div>\n'.format(rlo, rhi)
-            html += '    <div class="col-unit">{}</div>\n'.format(unit)
-            html += '    <div class="col-strategy"><span class="badge badge-strategy">{}</span></div>\n'.format(
-                strat
-            )
-            html += '    <div class="col-mode"><span class="badge {}">{}</span></div>\n'.format(
-                badge_cls, mode_text
-            )
-            html += '    <div class="col-value">{}</div>\n'.format(val_str)
+            html += f'    <div class="col-type">{dtype}</div>\n'
+            html += f'    <div class="col-range">{rlo} ~ {rhi}</div>\n'
+            html += f'    <div class="col-unit">{unit}</div>\n'
+            html += f'    <div class="col-strategy"><span class="badge badge-strategy">{strat}</span></div>\n'
+            html += f'    <div class="col-mode"><span class="badge {badge_cls}">{mode_text}</span></div>\n'
+            html += f'    <div class="col-value">{val_str}</div>\n'
             html += "  </div>\n"
             idx += 1
             if idx >= node_limit:
@@ -163,9 +157,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             break
 
     if total > node_limit:
-        html += '  <div class="row" style="justify-content:center;color:#64748b;padding:12px;">... 还有 {} 个节点 ...</div>\n'.format(
-            total - node_limit
-        )
+        html += f'  <div class="row" style="justify-content:center;color:#64748b;padding:12px;">... 还有 {total - node_limit} 个节点 ...</div>\n'
 
     html += """</div>
 
@@ -178,9 +170,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Generate preview HTML from OPC simulator API"
-    )
+    parser = argparse.ArgumentParser(description="Generate preview HTML from OPC simulator API")
     parser.add_argument(
         "--api-url",
         default=DEFAULT_API_URL,

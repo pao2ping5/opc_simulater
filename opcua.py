@@ -11,8 +11,7 @@ Real OPC UA wire protocol is not needed for the Web Console demonstration.
 from __future__ import annotations
 
 import enum
-from typing import Any, Dict, List, Tuple
-
+from typing import Any
 
 # ── ua helpers ──────────────────────────────────────────────────────────────
 
@@ -78,11 +77,11 @@ class NodeId:
 class _ObjectsStub:
     """A stand-in for the OPC UA Objects node — we just need add_folder."""
 
-    def __init__(self, server: "Server") -> None:
+    def __init__(self, server: Server) -> None:
         self._server = server
-        self._children: Dict[str, "_FolderStub"] = {}
+        self._children: dict[str, _FolderStub] = {}
 
-    def add_folder(self, nodeid: NodeId, name: str) -> "_FolderStub":
+    def add_folder(self, nodeid: NodeId, name: str) -> _FolderStub:
         ident = str(nodeid.Identifier) if isinstance(nodeid, NodeId) else str(nodeid)
         folder = _FolderStub(self._server, name)
         self._children[ident] = folder
@@ -90,13 +89,13 @@ class _ObjectsStub:
 
 
 class _FolderStub:
-    def __init__(self, server: "Server", name: str) -> None:
+    def __init__(self, server: Server, name: str) -> None:
         self._server = server
         self.name = name
-        self._children: Dict[str, "_FolderStub"] = {}
-        self._variables: Dict[str, "_VariableStub"] = {}
+        self._children: dict[str, _FolderStub] = {}
+        self._variables: dict[str, _VariableStub] = {}
 
-    def add_folder(self, nodeid: Any, name: str) -> "_FolderStub":
+    def add_folder(self, nodeid: Any, name: str) -> _FolderStub:
         ident = str(nodeid.Identifier) if isinstance(nodeid, NodeId) else str(nodeid)
         folder = _FolderStub(self._server, name)
         self._children[ident] = folder
@@ -104,7 +103,7 @@ class _FolderStub:
 
     def add_variable(
         self, nodeid: Any, name: str, val: Any, varianttype: Any = None
-    ) -> "_VariableStub":
+    ) -> _VariableStub:
         ident = str(nodeid.Identifier) if isinstance(nodeid, NodeId) else str(nodeid)
         var = _VariableStub(val)
         self._variables[ident] = var
@@ -153,7 +152,7 @@ class Server:
     def get_objects_node(self) -> _ObjectsStub:
         return self.nodes
 
-    def set_values(self, values: List[Tuple[Any, Any]]) -> None:
+    def set_values(self, values: list[tuple[Any, Any]]) -> None:
         """values = [(node_id, val), ...]"""
         pass  # no-op for mock
 

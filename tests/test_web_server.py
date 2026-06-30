@@ -20,7 +20,6 @@ from web_server import (
     _parse_multipart_file,
 )
 
-
 # ── _parse_multipart_file ───────────────────────────────────────────
 
 
@@ -31,9 +30,9 @@ def _make_multipart(boundary: str, filename: str, content: bytes) -> bytes:
             f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
             f"Content-Type: application/octet-stream\r\n"
             f"\r\n"
-        ).encode("utf-8")
+        ).encode()
         + content
-        + f"\r\n--{boundary}--\r\n".encode("utf-8")
+        + f"\r\n--{boundary}--\r\n".encode()
     )
 
 
@@ -137,9 +136,7 @@ class _FakeHandler:
     """Minimal stub matching what _check_auth needs."""
 
     def __init__(self, auth_header=None):
-        self.headers = _FakeHeaders(
-            {"Authorization": auth_header} if auth_header else {}
-        )
+        self.headers = _FakeHeaders({"Authorization": auth_header} if auth_header else {})
 
     # Bind the real method
     _check_auth = web_server.APIHandler._check_auth

@@ -13,7 +13,7 @@ export const Header = memo(function Header({ stats, onSetAllMode }) {
     setPendingMode(null)
     try {
       await onSetAllMode(mode)
-    } catch (e) {
+    } catch {
       // Error already surfaced via useNodes error state; nothing to do here.
     }
   }

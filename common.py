@@ -12,9 +12,10 @@ import math
 import os
 import random
 import tempfile
-from dataclasses import dataclass, field, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 from openpyxl import load_workbook
 
@@ -69,7 +70,7 @@ class NodeMeta:
     range_hi: float = 100.0
     unit: str = ""
     gen_strategy: str = ""
-    gen_params: Dict[str, Any] = field(default_factory=dict)
+    gen_params: dict[str, Any] = field(default_factory=dict)
     description: str = ""
     instance_count: int = 1
     display_name: str = ""
@@ -78,7 +79,7 @@ class NodeMeta:
     # ---- derived helpers --------------------------------------------------
 
     @property
-    def parts(self) -> List[str]:
+    def parts(self) -> list[str]:
         return self.node_id.split(".")
 
     @property
@@ -109,7 +110,7 @@ class GroupInfo:
 
     key: str
     label: str
-    node_ids: List[str] = field(default_factory=list)
+    node_ids: list[str] = field(default_factory=list)
     node_count: int = 0
 
 
@@ -117,10 +118,10 @@ class GroupInfo:
 class DeviceModel:
     """A complete parsed device model ready to be served as an OPC UA simulation."""
 
-    nodes: Dict[str, NodeMeta] = field(default_factory=dict)
+    nodes: dict[str, NodeMeta] = field(default_factory=dict)
     """``node_id`` → ``NodeMeta`` (after instance expansion)."""
 
-    groups: Dict[str, GroupInfo] = field(default_factory=dict)
+    groups: dict[str, GroupInfo] = field(default_factory=dict)
     """Group key → GroupInfo (derived from node_id prefixes)."""
 
     separator: str = "."
@@ -148,23 +149,17 @@ class ValueStrategy:
 # -- built-in strategy implementations ---------------------------------------
 
 
-def _make_uniform(
-    lo: float, hi: float, _p: dict, _cur: float, _e: float, _t: int
-) -> float:
+def _make_uniform(lo: float, hi: float, _p: dict, _cur: float, _e: float, _t: int) -> float:
     return lo + (hi - lo) * random.random()
 
 
-def _make_normal(
-    lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int
-) -> float:
+def _make_normal(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
     center = lo + (hi - lo) * p.get("center_ratio", 0.5)
     std = (hi - lo) * p.get("std_ratio", 0.1)
     return max(lo, min(hi, random.gauss(center, std)))
 
 
-def _make_sinusoidal(
-    lo: float, hi: float, p: dict, _cur: float, elapsed: float, _t: int
-) -> float:
+def _make_sinusoidal(lo: float, hi: float, p: dict, _cur: float, elapsed: float, _t: int) -> float:
     center = (lo + hi) / 2
     amplitude = (hi - lo) / 2
     period = p.get("period_sec", 60.0)
@@ -172,23 +167,17 @@ def _make_sinusoidal(
     return center + amplitude * math.sin(2 * math.pi * elapsed / period + phase)
 
 
-def _make_binary(
-    _lo: float, _hi: float, p: dict, _cur: float, _e: float, _t: int
-) -> float:
+def _make_binary(_lo: float, _hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
     return float(random.randint(0, 1))
 
 
-def _make_random_walk(
-    lo: float, hi: float, p: dict, cur: float, _e: float, _t: int
-) -> float:
+def _make_random_walk(lo: float, hi: float, p: dict, cur: float, _e: float, _t: int) -> float:
     step = (hi - lo) * p.get("step_ratio", 0.02)
     val = cur + (2 * random.random() - 1) * step
     return max(lo, min(hi, val))
 
 
-def _make_ramp(
-    lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int
-) -> float:
+def _make_ramp(lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int) -> float:
     step = (hi - lo) * p.get("step_ratio", 0.01)
     # Guard against zero/negative step (hi==lo or step_ratio=0) → division by zero
     if step <= 0:
@@ -205,9 +194,7 @@ def _make_ramp(
     return cur_calc
 
 
-def _make_counter(
-    lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int
-) -> float:
+def _make_counter(lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int) -> float:
     step = p.get("step", 1.0)
     # Guard: modulo by zero when hi - lo + step == 0
     modulus = hi - lo + step
@@ -216,15 +203,11 @@ def _make_counter(
     return lo + ((tick * step) % modulus)
 
 
-def _make_constant(
-    _lo: float, _hi: float, p: dict, _cur: float, _e: float, _t: int
-) -> float:
+def _make_constant(_lo: float, _hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
     return float(p.get("value", 0.0))
 
 
-def _make_current(
-    lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int
-) -> float:
+def _make_current(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
     center = lo + (hi - lo) * p.get("center_ratio", 0.6)
     jitter = (hi - lo) * p.get("jitter_ratio", 0.15)
     return max(lo, min(hi, center + jitter * (2 * random.random() - 1)))
@@ -236,35 +219,27 @@ def _make_temp(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -
     return max(lo, min(hi, center + jitter * (2 * random.random() - 1)))
 
 
-def _make_pressure(
-    lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int
-) -> float:
+def _make_pressure(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
     center = lo + (hi - lo) * p.get("center_ratio", 0.5)
     jitter = (hi - lo) * p.get("jitter_ratio", 0.05)
     return max(lo, min(hi, center + jitter * (2 * random.random() - 1)))
 
 
-def _make_speed(
-    lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int
-) -> float:
+def _make_speed(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
     center = lo + (hi - lo) * p.get("center_ratio", 0.7)
     jitter = (hi - lo) * p.get("jitter_ratio", 0.05)
     return max(lo, min(hi, center + jitter * (2 * random.random() - 1)))
 
 
-_BUILTIN_STRATEGIES: List[ValueStrategy] = [
-    ValueStrategy(
-        "random_uniform", "均匀随机，在 [lo, hi] 范围内均匀分布", _make_uniform
-    ),
+_BUILTIN_STRATEGIES: list[ValueStrategy] = [
+    ValueStrategy("random_uniform", "均匀随机，在 [lo, hi] 范围内均匀分布", _make_uniform),
     ValueStrategy(
         "random_normal",
         "正态分布，中心=(lo+hi)*center_ratio，std=(hi-lo)*std_ratio",
         _make_normal,
     ),
     ValueStrategy("binary_toggle", "随机 0/1 翻转，用于布尔信号", _make_binary),
-    ValueStrategy(
-        "sinusoidal", "正弦波扫全量程，period_sec 控制周期", _make_sinusoidal
-    ),
+    ValueStrategy("sinusoidal", "正弦波扫全量程，period_sec 控制周期", _make_sinusoidal),
     ValueStrategy("random_walk", "布朗运动，当前值基础上随机游走", _make_random_walk),
     ValueStrategy("ramp", "线性斜坡，到 hi 后回 lo", _make_ramp),
     ValueStrategy("counter", "每次 tick 累加，到 hi 后回 lo", _make_counter),
@@ -279,27 +254,25 @@ _BUILTIN_STRATEGIES: List[ValueStrategy] = [
 class StrategyRegistry:
     """Holds all known value-generation strategies and picks the right one."""
 
-    def __init__(self, strategies: Optional[List[ValueStrategy]] = None):
-        self._map: Dict[str, ValueStrategy] = {}
+    def __init__(self, strategies: list[ValueStrategy] | None = None):
+        self._map: dict[str, ValueStrategy] = {}
         for s in strategies or _BUILTIN_STRATEGIES:
             self.register(s)
 
     def register(self, strategy: ValueStrategy) -> None:
         self._map[strategy.name] = strategy
 
-    def get(self, name: str) -> Optional[ValueStrategy]:
+    def get(self, name: str) -> ValueStrategy | None:
         return self._map.get(name)
 
-    def list_all(self) -> List[Dict[str, str]]:
-        return [
-            {"name": s.name, "description": s.description} for s in self._map.values()
-        ]
+    def list_all(self) -> list[dict[str, str]]:
+        return [{"name": s.name, "description": s.description} for s in self._map.values()]
 
     # ------------------------------------------------------------------
     # Auto-selection
     # ------------------------------------------------------------------
 
-    _AUTO_MAP: Dict[str, str] = {
+    _AUTO_MAP: dict[str, str] = {
         "bool": "binary_toggle",
         "string": "constant",
         "int": "random_uniform",
@@ -353,7 +326,7 @@ class StrategyRegistry:
 # ============================================================================
 
 # Column-name aliases so users can write either "node_id" or "NodeId" etc.
-_COLUMN_ALIASES: Dict[str, str] = {
+_COLUMN_ALIASES: dict[str, str] = {
     "node_id": "node_id",
     "nodeid": "node_id",
     "node id": "node_id",
@@ -382,9 +355,9 @@ def _normalize_header(raw: str) -> str:
     return str(raw).strip().lower() if raw else ""
 
 
-def _build_column_map(headers: List[str]) -> Dict[str, int]:
+def _build_column_map(headers: list[str]) -> dict[str, int]:
     """Map normalized header names → column index (0-based)."""
-    col_map: Dict[str, int] = {}
+    col_map: dict[str, int] = {}
     norm_headers = [_normalize_header(h) for h in headers]
 
     # Required columns — exact or alias match
@@ -395,9 +368,7 @@ def _build_column_map(headers: List[str]) -> Dict[str, int]:
                 col_map[req] = idx
                 break
         if req not in col_map:
-            raise ValueError(
-                f"Missing required column '{req}'.  Found headers: {headers}"
-            )
+            raise ValueError(f"Missing required column '{req}'.  Found headers: {headers}")
 
     # Optional columns — try each alias
     for col_field, aliases in _OPTIONAL_COLUMNS.items():
@@ -430,7 +401,7 @@ def _safe_int(val: Any, default: int = 1) -> int:
         return default
 
 
-def _safe_json(val: Any) -> Dict[str, Any]:
+def _safe_json(val: Any) -> dict[str, Any]:
     if val is None:
         return {}
     s = str(val).strip()
@@ -440,7 +411,7 @@ def _safe_json(val: Any) -> Dict[str, Any]:
         return json.loads(s)
     except json.JSONDecodeError:
         # Try parsing key=value or key:value lines
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         for part in s.replace(";", ",").split(","):
             part = part.strip()
             if not part:
@@ -460,8 +431,8 @@ def _safe_json(val: Any) -> Dict[str, Any]:
 
 def read_model_excel(
     xlsx_path: str | Path = "opc_sim_list.xlsx",
-    sheet_name: Optional[str] = None,
-) -> Tuple[List[NodeMeta], List[str]]:
+    sheet_name: str | None = None,
+) -> tuple[list[NodeMeta], list[str]]:
     """Parse a generic OPC model spreadsheet.
 
     Returns
@@ -483,17 +454,15 @@ def read_model_excel(
     headers = [str(c) if c is not None else "" for c in header_row]
     col = _build_column_map(headers)
 
-    nodes: List[NodeMeta] = []
-    warnings: List[str] = []
+    nodes: list[NodeMeta] = []
+    warnings: list[str] = []
 
     for row_num, row in enumerate(rows_iter, start=2):
         if row is None or all(c is None for c in row):
             continue
 
         node_id = (
-            _safe_str(row[col["node_id"]])
-            if "node_id" in col and len(row) > col["node_id"]
-            else ""
+            _safe_str(row[col["node_id"]]) if "node_id" in col and len(row) > col["node_id"] else ""
         )
         if not node_id:
             warnings.append(f"Row {row_num}: empty node_id, skipping")
@@ -505,16 +474,14 @@ def read_model_excel(
             else "float"
         )
         if data_type not in ("float", "int", "bool", "string"):
-            warnings.append(
-                f"Row {row_num}: unknown data_type '{data_type}', defaulting to float"
-            )
+            warnings.append(f"Row {row_num}: unknown data_type '{data_type}', defaulting to float")
             data_type = "float"
 
-        def _opt(field: str, default: Any = "") -> Any:
+        def _opt(field: str, default: Any = "", _row=row) -> Any:
             if field not in col:
                 return default
             idx = col[field]
-            return row[idx] if idx < len(row) and row[idx] is not None else default
+            return _row[idx] if idx < len(_row) and _row[idx] is not None else default
 
         meta = NodeMeta(
             node_id=node_id,
@@ -540,13 +507,13 @@ def read_model_excel(
     return nodes, warnings
 
 
-def build_device_model(nodes: List[NodeMeta]) -> DeviceModel:
+def build_device_model(nodes: list[NodeMeta]) -> DeviceModel:
     """Build a complete :class:`DeviceModel` from a list of :class:`NodeMeta`.
 
     Expands ``instance_count`` and groups nodes by ``group_key``.
     """
     model = DeviceModel()
-    group_order: List[str] = []
+    group_order: list[str] = []
 
     for meta in nodes:
         gk = meta.group_key
@@ -586,14 +553,14 @@ def build_device_model(nodes: List[NodeMeta]) -> DeviceModel:
 # ============================================================================
 
 
-def node_meta_to_dict(node: NodeMeta) -> Dict[str, Any]:
+def node_meta_to_dict(node: NodeMeta) -> dict[str, Any]:
     """Serialize NodeMeta to a plain dict (safe for JSON)."""
     d = asdict(node)
     d["gen_params"] = json.dumps(node.gen_params, ensure_ascii=False, default=str)
     return d
 
 
-def dict_to_node_meta(d: Dict[str, Any]) -> NodeMeta:
+def dict_to_node_meta(d: dict[str, Any]) -> NodeMeta:
     """Deserialize from a plain dict back to NodeMeta."""
     d = dict(d)  # shallow copy
     if "gen_params" in d and isinstance(d["gen_params"], str):
@@ -637,7 +604,7 @@ def save_model_state(model: DeviceModel, json_path: str | Path) -> None:
         raise
 
 
-def load_model_state(json_path: str | Path) -> Optional[DeviceModel]:
+def load_model_state(json_path: str | Path) -> DeviceModel | None:
     """Load a previously saved model state.
 
     Returns ``None`` if the file doesn't exist.
@@ -674,7 +641,7 @@ def load_model_state(json_path: str | Path) -> Optional[DeviceModel]:
 # Singleton – Strategy registry
 # ============================================================================
 
-_strategy_registry: Optional[StrategyRegistry] = None
+_strategy_registry: StrategyRegistry | None = None
 
 
 def get_strategy_registry() -> StrategyRegistry:

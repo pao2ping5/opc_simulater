@@ -14,9 +14,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
-
-from opcua import Server, ua
+from typing import Any
 
 from common import (
     DeviceModel,
@@ -26,6 +24,7 @@ from common import (
     node_meta_to_dict,
     save_model_state,
 )
+from opcua import Server, ua
 
 log = logging.getLogger("opc-sim")
 
@@ -50,8 +49,8 @@ class GenericOPCSimulator:
     def __init__(
         self,
         endpoint: str = DEFAULT_OPC_ENDPOINT,
-        strategy_registry: Optional[StrategyRegistry] = None,
-        state_file: Optional[Any] = None,
+        strategy_registry: StrategyRegistry | None = None,
+        state_file: Any | None = None,
     ) -> None:
         """Create the simulator.
 
@@ -75,16 +74,16 @@ class GenericOPCSimulator:
         self._state_file = state_file
 
         # node_id → (NodeMeta, ua.Node)
-        self._nodes: Dict[str, Tuple[NodeMeta, ua.Node]] = {}
+        self._nodes: dict[str, tuple[NodeMeta, ua.Node]] = {}
         # node_id → mode ("random" | "manual")
-        self._modes: Dict[str, str] = {}
+        self._modes: dict[str, str] = {}
         # node_id → manual value
-        self._manual_vals: Dict[str, float] = {}
+        self._manual_vals: dict[str, float] = {}
         # node_id → current value snapshot (preserves actual typed value,
         # including strings/bools — not just floats)
-        self._current_vals: Dict[str, Any] = {}
+        self._current_vals: dict[str, Any] = {}
 
-        self._model: Optional[DeviceModel] = None
+        self._model: DeviceModel | None = None
         self.tick: int = 0
         self.running: bool = True
         self._lock = threading.Lock()
@@ -105,8 +104,8 @@ class GenericOPCSimulator:
 
         # Cache intermediate folders by full path to avoid duplicate creation
         # (server.py's one good idea, ported here).
-        folder_cache: Dict[str, ua.Node] = {}
-        group_folders: Dict[str, ua.Node] = {}
+        folder_cache: dict[str, ua.Node] = {}
+        group_folders: dict[str, ua.Node] = {}
         for gk in model.groups:
             group_folders[gk] = objects.add_folder(idx, gk)
             folder_cache[gk] = group_folders[gk]
@@ -122,9 +121,7 @@ class GenericOPCSimulator:
                 if folder_path not in folder_cache:
                     parent_key = ".".join(parts[: depth - 1])
                     parent_node = folder_cache.get(parent_key, objects)
-                    folder_cache[folder_path] = parent_node.add_folder(
-                        idx, parts[depth - 1]
-                    )
+                    folder_cache[folder_path] = parent_node.add_folder(idx, parts[depth - 1])
                 parent = folder_cache[folder_path]
 
             # Pick OPC UA variant type
@@ -246,15 +243,15 @@ class GenericOPCSimulator:
 
     # -- Thread-safe public API (used by HTTP handler) ------------------
 
-    def get_model(self) -> Optional[DeviceModel]:
+    def get_model(self) -> DeviceModel | None:
         return self._model
 
-    def get_nodes_snapshot(self) -> Dict[str, Any]:
+    def get_nodes_snapshot(self) -> dict[str, Any]:
         """Thread-safe snapshot for /api/values."""
         with self._lock:
             return {"current_vals": dict(self._current_vals)}
 
-    def get_full_state(self) -> List[Dict[str, Any]]:
+    def get_full_state(self) -> list[dict[str, Any]]:
         """Return full model data merged with live values for /api/nodes.
 
         Snapshot of model.groups / model.nodes is taken under the same lock
@@ -270,9 +267,9 @@ class GenericOPCSimulator:
             groups_snapshot = list(self._model.groups.items())
             nodes_snapshot = dict(self._model.nodes)
 
-        result: List[Dict[str, Any]] = []
+        result: list[dict[str, Any]] = []
         for gk, gi in groups_snapshot:
-            nodes_out: List[Dict[str, Any]] = []
+            nodes_out: list[dict[str, Any]] = []
             for nid in gi.node_ids:
                 meta = nodes_snapshot.get(nid)
                 if meta is None:
@@ -288,7 +285,7 @@ class GenericOPCSimulator:
 
         return result
 
-    def get_strategies(self) -> List[Dict[str, str]]:
+    def get_strategies(self) -> list[dict[str, str]]:
         return self._strategy.list_all()
 
     # -- Per-node operations (thread-safe) ------------------------------
@@ -313,7 +310,7 @@ class GenericOPCSimulator:
             for key in self._modes:
                 self._modes[key] = mode
 
-    def update_node_meta(self, node_id: str, updates: Dict[str, Any]) -> bool:
+    def update_node_meta(self, node_id: str, updates: dict[str, Any]) -> bool:
         """Update metadata fields of a node.  Returns True if found.
 
         Acquires the lock, applies the changes, and persists once (when
@@ -345,7 +342,7 @@ class GenericOPCSimulator:
                 save_model_state(self._model, self._state_file)
         return changed
 
-    def batch_update(self, updates: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def batch_update(self, updates: list[dict[str, Any]]) -> dict[str, Any]:
         """Apply a batch of meta updates in a single lock+save cycle.
 
         Single lock acquisition, single save at the end (when configured).
@@ -367,7 +364,7 @@ class GenericOPCSimulator:
             "display_name",
         }
         ok = 0
-        failed: List[str] = []
+        failed: list[str] = []
         any_changed = False
 
         with self._lock:
