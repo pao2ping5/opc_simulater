@@ -24,3 +24,8 @@ opc_sim_list.xlsx
 # OS
 .DS_Store
 Thumbs.db
+
+# Runtime state (regenerated on first run)
+model_state.json
+screenshot.png
+uploads/

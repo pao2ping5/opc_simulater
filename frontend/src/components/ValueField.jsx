@@ -1,8 +1,9 @@
-import { useState, memo, useMemo } from 'react'
+import { useState, memo, useMemo, useEffect } from 'react'
 
 export const ValueField = memo(function ValueField({
   node,
-  uniqueKey,
+  nodeId,
+  value,
   onSetValue,
   layout = 'row',
 }) {
@@ -10,17 +11,24 @@ export const ValueField = memo(function ValueField({
   const [confirmed, setConfirmed] = useState(false)
   const isRandom = node.mode === 'random'
 
+  // Sync local input state when the upstream `node.manual` changes (e.g.
+  // another browser or the server updated it).  Without this, the input
+  // would forever show the value from first mount.
+  useEffect(() => {
+    setManualValue(node.manual?.toString() || '0')
+  }, [node.manual])
+
   const displayValue = useMemo(() => {
-    if (typeof node.value === 'number') {
-      return Number.isInteger(node.value) ? node.value.toString() : node.value.toFixed(2)
+    if (typeof value === 'number') {
+      return Number.isInteger(value) ? value.toString() : value.toFixed(2)
     }
-    return node.value
-  }, [node.value])
+    return value
+  }, [value])
 
   const handleConfirm = async () => {
     const v = parseFloat(manualValue)
     if (isNaN(v)) return
-    await onSetValue(uniqueKey, v)
+    await onSetValue(nodeId, v)
     setConfirmed(true)
     setTimeout(() => setConfirmed(false), 1500)
   }

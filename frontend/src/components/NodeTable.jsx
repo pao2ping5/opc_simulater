@@ -4,7 +4,15 @@ import { NodeRow } from './NodeRow'
 
 const ROW_HEIGHT = 48
 
-export const NodeTable = memo(function NodeTable({ flatNodes, onSetMode, onSetValue }) {
+// Available viewport height for the scrolling list.
+// Header (~56px sticky) + ErrorBar (~36px when shown) + Stats card (~84px)
+// + TabBar (~44px) + SearchBar (~52px) + page padding (24px) ≈ 296px.
+// Subtract another ~64px for breathing room.  These are approximations;
+// the overscan and minHeight keep things sane if the estimate is off.
+const TABLE_VIEWPORT_OFFSET = 360
+const TABLE_MIN_HEIGHT = 400
+
+export const NodeTable = memo(function NodeTable({ flatNodes, values, strategies, onSetMode, onSetValue, onUpdateMeta }) {
   const parentRef = useRef(null)
 
   const virtualizer = useVirtualizer({
@@ -19,12 +27,15 @@ export const NodeTable = memo(function NodeTable({ flatNodes, onSetMode, onSetVa
     if (!item) return null
     return (
       <NodeRow
-        key={item.uniqueKey}
+        key={item.nodeId}
         index={virtualRow.index + 1}
         node={item.node}
-        uniqueKey={item.uniqueKey}
+        nodeId={item.nodeId}
+        value={values ? values[item.nodeId] : undefined}
+        strategies={strategies}
         onSetMode={onSetMode}
         onSetValue={onSetValue}
+        onUpdateMeta={onUpdateMeta}
         style={{
           position: 'absolute',
           top: 0,
@@ -35,7 +46,7 @@ export const NodeTable = memo(function NodeTable({ flatNodes, onSetMode, onSetVa
         }}
       />
     )
-  }, [flatNodes, onSetMode, onSetValue])
+  }, [flatNodes, values, strategies, onSetMode, onSetValue, onUpdateMeta])
 
   return (
     <div
@@ -45,9 +56,15 @@ export const NodeTable = memo(function NodeTable({ flatNodes, onSetMode, onSetVa
         className="flex items-center py-3 px-3 text-xs font-semibold uppercase tracking-wider border-b"
         style={{ background: 'var(--surface2)', color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
         <div className="w-1 shrink-0" />
-        <div className="hidden sm:block w-12 shrink-0">序号</div>
-        <div className="flex-1 min-w-[120px]">节点名称</div>
-        <div className="w-[120px] shrink-0">模式</div>
+        <div className="hidden xl:block w-12 shrink-0">序号</div>
+        <div className="flex-1 min-w-[100px]">节点名称</div>
+        <div className="hidden xl:flex items-center gap-1.5 px-1 shrink-0">
+          <span style={{ width: '64px' }}>类型</span>
+          <span style={{ width: '120px' }}>量程</span>
+          <span style={{ width: '44px' }}>单位</span>
+          <span style={{ width: '110px' }}>策略</span>
+        </div>
+        <div className="w-[110px] shrink-0">模式</div>
         <div className="w-[180px] shrink-0 text-right pr-3">当前值</div>
       </div>
 
@@ -62,7 +79,7 @@ export const NodeTable = memo(function NodeTable({ flatNodes, onSetMode, onSetVa
       ) : (
         <div
           ref={parentRef}
-          style={{ height: 'calc(100vh - 360px)', overflow: 'auto', minHeight: '400px' }}>
+          style={{ height: `calc(100vh - ${TABLE_VIEWPORT_OFFSET}px)`, overflow: 'auto', minHeight: `${TABLE_MIN_HEIGHT}px` }}>
           <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
             {virtualizer.getVirtualItems().map(renderRow)}
           </div>

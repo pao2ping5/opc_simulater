@@ -6,8 +6,16 @@ export const Header = memo(function Header({ stats, onSetAllMode }) {
 
   const handleConfirm = async () => {
     if (!pendingMode) return
-    await onSetAllMode(pendingMode)
+    const mode = pendingMode
+    // Optimistically close the dialog so the user gets immediate feedback.
+    // If the API call fails, onSetAllMode (which calls useNodes.handleSetAllMode)
+    // will surface the error via the top-level ErrorBar.
     setPendingMode(null)
+    try {
+      await onSetAllMode(mode)
+    } catch (e) {
+      // Error already surfaced via useNodes error state; nothing to do here.
+    }
   }
 
   const modeLabel = pendingMode === 'random' ? '随机' : '手动'

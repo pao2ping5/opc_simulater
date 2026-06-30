@@ -4,7 +4,14 @@ import { NodeCard } from './NodeCard'
 
 const CARD_HEIGHT = 104
 
-export const NodeCardList = memo(function NodeCardList({ flatNodes, onSetMode, onSetValue }) {
+// Available viewport height for the scrolling list (mobile card layout).
+// Uses dvh (dynamic viewport height) so mobile browser chrome doesn't
+// overlap the list.  Offset accounts for Header + Stats + TabBar +
+// SearchBar + padding on small screens.
+const CARD_LIST_VIEWPORT_OFFSET = 340
+const CARD_LIST_MIN_HEIGHT = 320
+
+export const NodeCardList = memo(function NodeCardList({ flatNodes, values, strategies, onSetMode, onSetValue, onUpdateMeta }) {
   const parentRef = useRef(null)
 
   const virtualizer = useVirtualizer({
@@ -19,7 +26,7 @@ export const NodeCardList = memo(function NodeCardList({ flatNodes, onSetMode, o
     if (!item) return null
     return (
       <div
-        key={item.uniqueKey}
+        key={item.nodeId}
         style={{
           position: 'absolute',
           top: 0,
@@ -31,13 +38,16 @@ export const NodeCardList = memo(function NodeCardList({ flatNodes, onSetMode, o
         }}>
         <NodeCard
           node={item.node}
-          uniqueKey={item.uniqueKey}
+          nodeId={item.nodeId}
+          value={values ? values[item.nodeId] : undefined}
+          strategies={strategies}
           onSetMode={onSetMode}
           onSetValue={onSetValue}
+          onUpdateMeta={onUpdateMeta}
         />
       </div>
     )
-  }, [flatNodes, onSetMode, onSetValue])
+  }, [flatNodes, values, strategies, onSetMode, onSetValue, onUpdateMeta])
 
   if (flatNodes.length === 0) {
     return (
@@ -54,7 +64,7 @@ export const NodeCardList = memo(function NodeCardList({ flatNodes, onSetMode, o
   return (
     <div
       ref={parentRef}
-      style={{ height: 'calc(100dvh - 340px)', overflow: 'auto', minHeight: '320px' }}
+      style={{ height: `calc(100dvh - ${CARD_LIST_VIEWPORT_OFFSET}px)`, overflow: 'auto', minHeight: `${CARD_LIST_MIN_HEIGHT}px` }}
       className="pb-[env(safe-area-inset-bottom)]">
       <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
         {virtualizer.getVirtualItems().map(renderCard)}

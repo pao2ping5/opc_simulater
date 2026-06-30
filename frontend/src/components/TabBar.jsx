@@ -34,8 +34,8 @@ const Tab = memo(function Tab({ label, count, active, onClick }) {
         <span
           className="px-1.5 py-0.5 rounded text-xs font-mono"
           style={{
-            background: active ? 'var(--surface2)' : 'var(--surface2)',
-            color: active ? 'var(--text-secondary)' : 'var(--text-muted)',
+            background: active ? 'var(--surface4)' : 'var(--surface2)',
+            color: active ? 'var(--text-primary)' : 'var(--text-muted)',
           }}>
           {count}
         </span>

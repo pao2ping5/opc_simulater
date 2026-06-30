@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react'
 import { useNodes } from './hooks/useNodes'
 import { useFilteredNodes, useTotalNodeCount } from './hooks/useFilteredNodes'
+import { useMediaQuery } from './hooks/useMediaQuery'
+import { useStrategies } from './hooks/useStrategies'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { ErrorBar } from './components/ErrorBar'
 import { Header } from './components/Header'
 import { Stats } from './components/Stats'
 import { TabBar } from './components/TabBar'
@@ -9,9 +13,25 @@ import { NodeTable } from './components/NodeTable'
 import { NodeCardList } from './components/NodeCardList'
 
 function App() {
-  const { groups, stats, loading, setMode, setValue, setAllMode } = useNodes()
+  const {
+    groups,
+    values,
+    stats,
+    loading,
+    error,
+    clearError,
+    setMode,
+    setValue,
+    setAllMode,
+    updateMeta,
+  } = useNodes()
+  const { strategies } = useStrategies()
   const [activeTab, setActiveTab] = useState('all')
   const [search, setSearch] = useState('')
+  // Conditionally render desktop table vs mobile card list so only one
+  // virtualizer runs at a time.  Previous versions mounted both and hid one
+  // via CSS, doubling the work on every render.
+  const isDesktop = useMediaQuery('(min-width: 640px)')
 
   const searchLower = useMemo(() => search.toLowerCase(), [search])
   const flatNodes = useFilteredNodes(groups, activeTab, searchLower)
@@ -27,12 +47,16 @@ function App() {
 
   const listProps = {
     flatNodes,
+    values,
+    strategies,
     onSetMode: setMode,
     onSetValue: setValue,
+    onUpdateMeta: updateMeta,
   }
 
   return (
     <div className="min-h-screen pb-[env(safe-area-inset-bottom)]" style={{ background: 'var(--bg)' }}>
+      <ErrorBar error={error} onDismiss={clearError} />
       <Header stats={stats} onSetAllMode={setAllMode} />
       <div className="max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
         <Stats stats={stats} />
@@ -43,15 +67,16 @@ function App() {
           resultCount={flatNodes.length}
           totalCount={totalCount}
         />
-        <div className="sm:hidden">
-          <NodeCardList {...listProps} />
-        </div>
-        <div className="hidden sm:block">
-          <NodeTable {...listProps} />
-        </div>
+        {isDesktop ? <NodeTable {...listProps} /> : <NodeCardList {...listProps} />}
       </div>
     </div>
   )
 }
 
-export default App
+export default function AppWithBoundary() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  )
+}
