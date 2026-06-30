@@ -7,6 +7,7 @@ without circular dependencies.
 Most values are overridable via environment variables for containerized
 or production deployments.
 """
+
 from __future__ import annotations
 
 import logging

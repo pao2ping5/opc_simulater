@@ -11,8 +11,7 @@ Real OPC UA wire protocol is not needed for the Web Console demonstration.
 from __future__ import annotations
 
 import enum
-import threading
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 # ── ua helpers ──────────────────────────────────────────────────────────────
@@ -57,17 +56,23 @@ class NodeIdType(enum.IntEnum):
 
 
 class NodeId:
-    def __init__(self, identifier: Any = 0, namespaceidx: int = 0,
-                 nodeidtype: NodeIdType = NodeIdType.Numeric) -> None:
+    def __init__(
+        self,
+        identifier: Any = 0,
+        namespaceidx: int = 0,
+        nodeidtype: NodeIdType = NodeIdType.Numeric,
+    ) -> None:
         self.Identifier = identifier
         self.NamespaceIndex = namespaceidx
         self.NodeIdType = nodeidtype
 
     def __repr__(self) -> str:
-        return (f"NumericNodeId(Identifier={self.Identifier!r}, "
-                f"NamespaceIndex={self.NamespaceIndex!r}, "
-                f"NodeIdType=<NodeIdType.{self.NodeIdType.name}: "
-                f"{self.NodeIdType.value}>)")
+        return (
+            f"NumericNodeId(Identifier={self.Identifier!r}, "
+            f"NamespaceIndex={self.NamespaceIndex!r}, "
+            f"NodeIdType=<NodeIdType.{self.NodeIdType.name}: "
+            f"{self.NodeIdType.value}>)"
+        )
 
 
 class _ObjectsStub:
@@ -97,8 +102,9 @@ class _FolderStub:
         self._children[ident] = folder
         return folder
 
-    def add_variable(self, nodeid: Any, name: str, val: Any,
-                     varianttype: Any = None) -> "_VariableStub":
+    def add_variable(
+        self, nodeid: Any, name: str, val: Any, varianttype: Any = None
+    ) -> "_VariableStub":
         ident = str(nodeid.Identifier) if isinstance(nodeid, NodeId) else str(nodeid)
         var = _VariableStub(val)
         self._variables[ident] = var

@@ -7,14 +7,13 @@ Covers:
 - _parse_json_body: would need a handler stub; covered indirectly
 - APIHandler._check_auth: token present/absent, public paths, static paths
 """
-import io
+
 from pathlib import Path
 
 import pytest
 
 import web_server
 from web_server import (
-    API_TOKEN,
     PUBLIC_API_PATHS,
     _consteq,
     _is_path_allowed,
@@ -27,11 +26,15 @@ from web_server import (
 
 def _make_multipart(boundary: str, filename: str, content: bytes) -> bytes:
     return (
-        f"--{boundary}\r\n"
-        f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
-        f"Content-Type: application/octet-stream\r\n"
-        f"\r\n"
-    ).encode("utf-8") + content + f"\r\n--{boundary}--\r\n".encode("utf-8")
+        (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+            f"Content-Type: application/octet-stream\r\n"
+            f"\r\n"
+        ).encode("utf-8")
+        + content
+        + f"\r\n--{boundary}--\r\n".encode("utf-8")
+    )
 
 
 def test_parse_multipart_extracts_filename_and_bytes():
@@ -132,8 +135,11 @@ class _FakeHeaders:
 
 class _FakeHandler:
     """Minimal stub matching what _check_auth needs."""
+
     def __init__(self, auth_header=None):
-        self.headers = _FakeHeaders({"Authorization": auth_header} if auth_header else {})
+        self.headers = _FakeHeaders(
+            {"Authorization": auth_header} if auth_header else {}
+        )
 
     # Bind the real method
     _check_auth = web_server.APIHandler._check_auth
@@ -148,6 +154,7 @@ def no_token_env(monkeypatch):
     """
     monkeypatch.setattr(web_server, "API_TOKEN", "")
     import api_handler
+
     monkeypatch.setattr(api_handler, "API_TOKEN", "")
     return web_server
 
@@ -157,6 +164,7 @@ def token_env(monkeypatch):
     """Enable auth with a known token."""
     monkeypatch.setattr(web_server, "API_TOKEN", "secret-token-123")
     import api_handler
+
     monkeypatch.setattr(api_handler, "API_TOKEN", "secret-token-123")
     return web_server
 

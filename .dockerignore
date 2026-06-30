@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Frontend build artifacts (built inside the image)
+frontend/node_modules/
+frontend/dist/
+
+# Runtime state
+model_state.json
+screenshot.png
+uploads/
+
+# Git / CI
+.git/
+.github/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Generated
+opc_sim_list.xlsx
+
+# Docs / images
+*.md
+frontend/design-*.png

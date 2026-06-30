@@ -10,14 +10,13 @@ Covers:
 - update_node_meta / batch_update (with and without state_file)
 - reload_model: clears and rebuilds
 """
+
 import random
 from pathlib import Path
 
 import pytest
 
 from common import (
-    DeviceModel,
-    GroupInfo,
     NodeMeta,
     build_device_model,
 )
@@ -27,7 +26,9 @@ from simulator import GenericOPCSimulator
 @pytest.fixture
 def small_model():
     nodes = [
-        NodeMeta(node_id="A.B.temp", data_type="float", range_lo=0, range_hi=100, unit="C"),
+        NodeMeta(
+            node_id="A.B.temp", data_type="float", range_lo=0, range_hi=100, unit="C"
+        ),
         NodeMeta(node_id="A.B.switch", data_type="bool"),
         NodeMeta(node_id="A.C.counter", data_type="int", range_lo=0, range_hi=1000),
         NodeMeta(node_id="A.C.label", data_type="string"),
@@ -40,6 +41,7 @@ def sim(small_model):
     s = GenericOPCSimulator()
     s.setup(small_model)
     import time
+
     s._start_time = time.time()
     return s
 
@@ -182,11 +184,13 @@ def test_update_node_meta_ignores_disallowed_field(sim):
 def test_batch_update_single_save(sim, tmp_path: Path):
     """When state_file is configured, batch_update should save once at the end."""
     sim._state_file = tmp_path / "state.json"
-    result = sim.batch_update([
-        {"node_id": "A.B.temp", "unit": "K"},
-        {"node_id": "A.C.counter", "unit": "Hz"},
-        {"node_id": "NONEXISTENT", "unit": "X"},
-    ])
+    result = sim.batch_update(
+        [
+            {"node_id": "A.B.temp", "unit": "K"},
+            {"node_id": "A.C.counter", "unit": "Hz"},
+            {"node_id": "NONEXISTENT", "unit": "X"},
+        ]
+    )
     assert result["ok"] == 2
     assert "NONEXISTENT" in result["failed"]
     assert sim._model.nodes["A.B.temp"].unit == "K"
@@ -203,10 +207,12 @@ def test_batch_update_no_state_file_skips_persistence(sim):
 
 
 def test_batch_update_invalid_item_recorded(sim):
-    result = sim.batch_update([
-        "not a dict",  # invalid
-        {"node_id": "A.B.temp", "unit": "X"},
-    ])
+    result = sim.batch_update(
+        [
+            "not a dict",  # invalid
+            {"node_id": "A.B.temp", "unit": "X"},
+        ]
+    )
     assert result["ok"] == 1
     assert any("invalid" in f for f in result["failed"])
 

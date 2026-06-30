@@ -6,6 +6,7 @@ Single ``APIHandler`` class extends ``SimpleHTTPRequestHandler`` to serve:
 
 Lives in its own module so ``web_server.py`` stays a thin entry point.
 """
+
 from __future__ import annotations
 
 import json
@@ -67,7 +68,7 @@ class APIHandler(SimpleHTTPRequestHandler):
         header = self.headers.get("Authorization", "")
         if not header.startswith("Bearer "):
             return False
-        return _consteq(header[len("Bearer "):].strip(), API_TOKEN)
+        return _consteq(header[len("Bearer ") :].strip(), API_TOKEN)
 
     def _send_unauthorized(self) -> None:
         self.send_response(401)
@@ -76,8 +77,9 @@ class APIHandler(SimpleHTTPRequestHandler):
         self._cors()
         self.end_headers()
         self.wfile.write(
-            json.dumps({"error": "unauthorized", "message": "Missing or invalid token"})
-            .encode("utf-8")
+            json.dumps(
+                {"error": "unauthorized", "message": "Missing or invalid token"}
+            ).encode("utf-8")
         )
 
     # -- CORS ------------------------------------------------------------
@@ -90,7 +92,9 @@ class APIHandler(SimpleHTTPRequestHandler):
         allowed = "*" if "*" in CORS_ALLOWED_ORIGINS else origin
         if allowed and (allowed == "*" or origin in CORS_ALLOWED_ORIGINS):
             self.send_header("Access-Control-Allow-Origin", allowed)
-            self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
+            self.send_header(
+                "Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS"
+            )
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
             if allowed != "*":
                 self.send_header("Vary", "Origin")
@@ -310,7 +314,9 @@ class APIHandler(SimpleHTTPRequestHandler):
             return
 
         try:
-            filename, file_bytes = _parse_multipart_file(body, self.headers.get("Content-Type", ""))
+            filename, file_bytes = _parse_multipart_file(
+                body, self.headers.get("Content-Type", "")
+            )
         except ValueError as exc:
             self.send_error(400, str(exc))
             return

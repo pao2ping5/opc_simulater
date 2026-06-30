@@ -7,6 +7,7 @@ Covers:
 - save_model_state / load_model_state: file persistence (atomic write)
 - Edge cases: empty sheet, missing columns, range_lo > range_hi swap
 """
+
 import json
 from pathlib import Path
 
@@ -35,8 +36,28 @@ def sample_xlsx(tmp_path: Path) -> Path:
     wb = Workbook()
     ws = wb.active
     ws.title = "PointTable"
-    ws.append(["node_id", "data_type", "range_lo", "range_hi", "unit", "gen_strategy", "gen_params"])
-    ws.append(["Shearer.left_motor.current", "float", 0, 100, "A", "random_current", '{"center_ratio":0.6}'])
+    ws.append(
+        [
+            "node_id",
+            "data_type",
+            "range_lo",
+            "range_hi",
+            "unit",
+            "gen_strategy",
+            "gen_params",
+        ]
+    )
+    ws.append(
+        [
+            "Shearer.left_motor.current",
+            "float",
+            0,
+            100,
+            "A",
+            "random_current",
+            '{"center_ratio":0.6}',
+        ]
+    )
     ws.append(["Shearer.left_motor.switch", "bool", 0, 1, "", "binary_toggle", ""])
     ws.append(["Belt.main.speed", "int", 0, 1500, "rpm", "random_uniform", ""])
     path = tmp_path / "sample.xlsx"
@@ -224,8 +245,9 @@ def test_save_and_load_model_state_round_trip(tmp_path: Path):
         node_id="A.B.temp", data_type="float", range_lo=0, range_hi=100, unit="C"
     )
     model.nodes["A.B.switch"] = NodeMeta(node_id="A.B.switch", data_type="bool")
-    model.groups["A"] = GroupInfo(key="A", label="A",
-                                  node_ids=["A.B.temp", "A.B.switch"], node_count=2)
+    model.groups["A"] = GroupInfo(
+        key="A", label="A", node_ids=["A.B.temp", "A.B.switch"], node_count=2
+    )
 
     state_path = tmp_path / "state.json"
     save_model_state(model, state_path)

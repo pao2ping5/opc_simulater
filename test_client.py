@@ -61,7 +61,8 @@ def main() -> None:
         help="Web server base URL (default: %(default)s)",
     )
     parser.add_argument(
-        "--watch", "-w",
+        "--watch",
+        "-w",
         action="store_true",
         help="Poll values every 2 seconds (Ctrl+C to stop)",
     )

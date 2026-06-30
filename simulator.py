@@ -8,6 +8,7 @@ Previous versions had two diverging copies (one with locks + manual mode +
 API surface, one without).  Bugs fixed in one were silently absent from the
 other.  This module is the merged, lock-protected, value-preserving version.
 """
+
 from __future__ import annotations
 
 import logging
@@ -19,7 +20,6 @@ from opcua import Server, ua
 
 from common import (
     DeviceModel,
-    GroupInfo,
     NodeMeta,
     StrategyRegistry,
     get_strategy_registry,
@@ -122,7 +122,9 @@ class GenericOPCSimulator:
                 if folder_path not in folder_cache:
                     parent_key = ".".join(parts[: depth - 1])
                     parent_node = folder_cache.get(parent_key, objects)
-                    folder_cache[folder_path] = parent_node.add_folder(idx, parts[depth - 1])
+                    folder_cache[folder_path] = parent_node.add_folder(
+                        idx, parts[depth - 1]
+                    )
                 parent = folder_cache[folder_path]
 
             # Pick OPC UA variant type
@@ -322,8 +324,14 @@ class GenericOPCSimulator:
 
         meta = self._model.nodes[node_id]
         allowed = {
-            "data_type", "range_lo", "range_hi", "unit",
-            "gen_strategy", "gen_params", "description", "display_name",
+            "data_type",
+            "range_lo",
+            "range_hi",
+            "unit",
+            "gen_strategy",
+            "gen_params",
+            "description",
+            "display_name",
         }
         changed = False
         with self._lock:
@@ -343,11 +351,20 @@ class GenericOPCSimulator:
         Single lock acquisition, single save at the end (when configured).
         """
         if self._model is None:
-            return {"ok": 0, "failed": [str(u.get("node_id", "(missing)")) for u in updates]}
+            return {
+                "ok": 0,
+                "failed": [str(u.get("node_id", "(missing)")) for u in updates],
+            }
 
         allowed = {
-            "data_type", "range_lo", "range_hi", "unit",
-            "gen_strategy", "gen_params", "description", "display_name",
+            "data_type",
+            "range_lo",
+            "range_hi",
+            "unit",
+            "gen_strategy",
+            "gen_params",
+            "description",
+            "display_name",
         }
         ok = 0
         failed: List[str] = []

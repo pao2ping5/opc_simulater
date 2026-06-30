@@ -1,0 +1,27 @@
+# Ruff configuration — keep rules relaxed to match the existing codebase.
+# Tighten gradually rather than failing CI on day one.
+
+target-version = "py310"
+line-length = 100
+
+[lint]
+# Default rule set + a few common-sense additions.
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long — handled by formatter
+    "B008",  # function call in default argument (common in FastAPI / dataclass defaults)
+    "B904",  # raise from — would require touching many existing except blocks
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["B011"]  # allow assert False in tests
+
+[format]
+quote-style = "preserve"

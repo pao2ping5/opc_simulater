@@ -148,17 +148,23 @@ class ValueStrategy:
 # -- built-in strategy implementations ---------------------------------------
 
 
-def _make_uniform(lo: float, hi: float, _p: dict, _cur: float, _e: float, _t: int) -> float:
+def _make_uniform(
+    lo: float, hi: float, _p: dict, _cur: float, _e: float, _t: int
+) -> float:
     return lo + (hi - lo) * random.random()
 
 
-def _make_normal(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
+def _make_normal(
+    lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int
+) -> float:
     center = lo + (hi - lo) * p.get("center_ratio", 0.5)
     std = (hi - lo) * p.get("std_ratio", 0.1)
     return max(lo, min(hi, random.gauss(center, std)))
 
 
-def _make_sinusoidal(lo: float, hi: float, p: dict, _cur: float, elapsed: float, _t: int) -> float:
+def _make_sinusoidal(
+    lo: float, hi: float, p: dict, _cur: float, elapsed: float, _t: int
+) -> float:
     center = (lo + hi) / 2
     amplitude = (hi - lo) / 2
     period = p.get("period_sec", 60.0)
@@ -166,17 +172,23 @@ def _make_sinusoidal(lo: float, hi: float, p: dict, _cur: float, elapsed: float,
     return center + amplitude * math.sin(2 * math.pi * elapsed / period + phase)
 
 
-def _make_binary(_lo: float, _hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
+def _make_binary(
+    _lo: float, _hi: float, p: dict, _cur: float, _e: float, _t: int
+) -> float:
     return float(random.randint(0, 1))
 
 
-def _make_random_walk(lo: float, hi: float, p: dict, cur: float, _e: float, _t: int) -> float:
+def _make_random_walk(
+    lo: float, hi: float, p: dict, cur: float, _e: float, _t: int
+) -> float:
     step = (hi - lo) * p.get("step_ratio", 0.02)
     val = cur + (2 * random.random() - 1) * step
     return max(lo, min(hi, val))
 
 
-def _make_ramp(lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int) -> float:
+def _make_ramp(
+    lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int
+) -> float:
     step = (hi - lo) * p.get("step_ratio", 0.01)
     # Guard against zero/negative step (hi==lo or step_ratio=0) → division by zero
     if step <= 0:
@@ -193,7 +205,9 @@ def _make_ramp(lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int)
     return cur_calc
 
 
-def _make_counter(lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int) -> float:
+def _make_counter(
+    lo: float, hi: float, p: dict, _cur: float, _e: float, tick: int
+) -> float:
     step = p.get("step", 1.0)
     # Guard: modulo by zero when hi - lo + step == 0
     modulus = hi - lo + step
@@ -202,11 +216,15 @@ def _make_counter(lo: float, hi: float, p: dict, _cur: float, _e: float, tick: i
     return lo + ((tick * step) % modulus)
 
 
-def _make_constant(_lo: float, _hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
+def _make_constant(
+    _lo: float, _hi: float, p: dict, _cur: float, _e: float, _t: int
+) -> float:
     return float(p.get("value", 0.0))
 
 
-def _make_current(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
+def _make_current(
+    lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int
+) -> float:
     center = lo + (hi - lo) * p.get("center_ratio", 0.6)
     jitter = (hi - lo) * p.get("jitter_ratio", 0.15)
     return max(lo, min(hi, center + jitter * (2 * random.random() - 1)))
@@ -218,23 +236,35 @@ def _make_temp(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -
     return max(lo, min(hi, center + jitter * (2 * random.random() - 1)))
 
 
-def _make_pressure(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
+def _make_pressure(
+    lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int
+) -> float:
     center = lo + (hi - lo) * p.get("center_ratio", 0.5)
     jitter = (hi - lo) * p.get("jitter_ratio", 0.05)
     return max(lo, min(hi, center + jitter * (2 * random.random() - 1)))
 
 
-def _make_speed(lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int) -> float:
+def _make_speed(
+    lo: float, hi: float, p: dict, _cur: float, _e: float, _t: int
+) -> float:
     center = lo + (hi - lo) * p.get("center_ratio", 0.7)
     jitter = (hi - lo) * p.get("jitter_ratio", 0.05)
     return max(lo, min(hi, center + jitter * (2 * random.random() - 1)))
 
 
 _BUILTIN_STRATEGIES: List[ValueStrategy] = [
-    ValueStrategy("random_uniform", "均匀随机，在 [lo, hi] 范围内均匀分布", _make_uniform),
-    ValueStrategy("random_normal", "正态分布，中心=(lo+hi)*center_ratio，std=(hi-lo)*std_ratio", _make_normal),
+    ValueStrategy(
+        "random_uniform", "均匀随机，在 [lo, hi] 范围内均匀分布", _make_uniform
+    ),
+    ValueStrategy(
+        "random_normal",
+        "正态分布，中心=(lo+hi)*center_ratio，std=(hi-lo)*std_ratio",
+        _make_normal,
+    ),
     ValueStrategy("binary_toggle", "随机 0/1 翻转，用于布尔信号", _make_binary),
-    ValueStrategy("sinusoidal", "正弦波扫全量程，period_sec 控制周期", _make_sinusoidal),
+    ValueStrategy(
+        "sinusoidal", "正弦波扫全量程，period_sec 控制周期", _make_sinusoidal
+    ),
     ValueStrategy("random_walk", "布朗运动，当前值基础上随机游走", _make_random_walk),
     ValueStrategy("ramp", "线性斜坡，到 hi 后回 lo", _make_ramp),
     ValueStrategy("counter", "每次 tick 累加，到 hi 后回 lo", _make_counter),
@@ -370,13 +400,13 @@ def _build_column_map(headers: List[str]) -> Dict[str, int]:
             )
 
     # Optional columns — try each alias
-    for field, aliases in _OPTIONAL_COLUMNS.items():
+    for col_field, aliases in _OPTIONAL_COLUMNS.items():
         for alias in aliases:
             for idx, nh in enumerate(norm_headers):
                 if nh == alias:
-                    col_map[field] = idx
+                    col_map[col_field] = idx
                     break
-            if field in col_map:
+            if col_field in col_map:
                 break
 
     return col_map
@@ -460,14 +490,24 @@ def read_model_excel(
         if row is None or all(c is None for c in row):
             continue
 
-        node_id = _safe_str(row[col["node_id"]]) if "node_id" in col and len(row) > col["node_id"] else ""
+        node_id = (
+            _safe_str(row[col["node_id"]])
+            if "node_id" in col and len(row) > col["node_id"]
+            else ""
+        )
         if not node_id:
             warnings.append(f"Row {row_num}: empty node_id, skipping")
             continue
 
-        data_type = _safe_str(row[col["data_type"]]).lower() if "data_type" in col and len(row) > col["data_type"] else "float"
+        data_type = (
+            _safe_str(row[col["data_type"]]).lower()
+            if "data_type" in col and len(row) > col["data_type"]
+            else "float"
+        )
         if data_type not in ("float", "int", "bool", "string"):
-            warnings.append(f"Row {row_num}: unknown data_type '{data_type}', defaulting to float")
+            warnings.append(
+                f"Row {row_num}: unknown data_type '{data_type}', defaulting to float"
+            )
             data_type = "float"
 
         def _opt(field: str, default: Any = "") -> Any:
@@ -564,18 +604,14 @@ def dict_to_node_meta(d: Dict[str, Any]) -> NodeMeta:
     return NodeMeta(**{k: d[k] for k in d if k in NodeMeta.__dataclass_fields__})
 
 
-def save_model_state(
-    model: DeviceModel, json_path: str | Path
-) -> None:
+def save_model_state(model: DeviceModel, json_path: str | Path) -> None:
     """Persist the current (potentially Web-edited) model state to JSON.
 
     Atomic write: serialize to a temp file in the same directory, then rename
     over the target.  A crash mid-write will not corrupt the existing state.
     """
     data = {
-        "nodes": {
-            nid: node_meta_to_dict(meta) for nid, meta in model.nodes.items()
-        },
+        "nodes": {nid: node_meta_to_dict(meta) for nid, meta in model.nodes.items()},
         "group_order": list(model.groups.keys()),
         "separator": model.separator,
     }

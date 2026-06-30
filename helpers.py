@@ -9,17 +9,17 @@ These are stateless utilities used by the HTTP handler:
 - ``_is_path_allowed`` — file_path allowlist check
 - ``_consteq`` — constant-time string comparison for token auth
 """
+
 from __future__ import annotations
 
 import hmac
 import json
-import logging
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from socketserver import ThreadingMixIn
 from typing import Any, Dict, Optional, Tuple
 
-from app_config import MAX_REQUEST_BYTES, MODEL_PATH_ALLOWLIST, log
+from app_config import MAX_REQUEST_BYTES, MODEL_PATH_ALLOWLIST
 
 # ---------------------------------------------------------------------------
 # Thread-safe HTTPServer
@@ -28,6 +28,7 @@ from app_config import MAX_REQUEST_BYTES, MODEL_PATH_ALLOWLIST, log
 
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle each request in its own thread."""
+
     daemon_threads = True
 
 
@@ -53,6 +54,7 @@ MIME_TYPES: Dict[str, str] = {
 # ---------------------------------------------------------------------------
 # Input validation helpers
 # ---------------------------------------------------------------------------
+
 
 def parse_json_body(handler: SimpleHTTPRequestHandler) -> Optional[Dict[str, Any]]:
     """Safely parse JSON request body.  Sends 400 on failure.
@@ -115,7 +117,7 @@ def parse_multipart_file(body: bytes, content_type: str) -> Tuple[str, bytes]:
         if header_end == -1:
             continue
         header_bytes = part[:header_end].decode("utf-8", errors="replace")
-        data_bytes = part[header_end + 4:]
+        data_bytes = part[header_end + 4 :]
         if data_bytes.endswith(b"\r\n"):
             data_bytes = data_bytes[:-2]
 
@@ -128,7 +130,7 @@ def parse_multipart_file(body: bytes, content_type: str) -> Tuple[str, bytes]:
                     for token in line.split(";"):
                         token = token.strip()
                         if token.lower().startswith("filename="):
-                            filename = token[len("filename="):].strip().strip('"')
+                            filename = token[len("filename=") :].strip().strip('"')
                             is_file = True
                             break
         if is_file and filename:

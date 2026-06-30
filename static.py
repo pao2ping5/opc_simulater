@@ -4,6 +4,7 @@ Serves the React SPA bundle from ``DIST_DIR`` with proper MIME types and
 SPA fallback to ``index.html`` for unknown routes.  Path-traversal safe
 via ``Path.relative_to``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
